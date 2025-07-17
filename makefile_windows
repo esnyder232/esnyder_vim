@@ -1,0 +1,68 @@
+###########################################
+# Variables + lists of .c and .h files for compilation steps
+TARGET_DIR_CLIENT		:= ..\bin_windows\client
+TARGET_DIR_SERVER		:= ..\bin_windows\server
+TARGET_EXEC_CLIENT 		:= client.exe
+TARGET_EXEC_SERVER 		:= server.exe
+TARGET_FULL_CLIENT		:= $(TARGET_DIR_CLIENT)\$(TARGET_EXEC_CLIENT)
+TARGET_FULL_SERVER		:= $(TARGET_DIR_SERVER)\$(TARGET_EXEC_SERVER)
+CFLAGS					:= -Wall -Wextra -Wconversion -g -std=c17
+LDFLAGS					:=
+#LDFLAGS					:= \
+#							-I..\third_party\iniparser\include		-L..\third_party\iniparser\lib		-l:libiniparser.a
+SRCS_CLIENT 			:= $(shell dir /b/s ..\src\client\*.c)
+SRCS_SERVER 			:= $(shell dir /b/s ..\src\server\*.c)
+SRCS_SHARED				:= $(shell dir /b/s ..\src\shared\*.c)
+SRCS_INIPARSER 			:= $(shell dir /b/s ..\third_party\iniparser_source\src\*.c)
+HEADERS_CLIENT			:= $(shell dir /b/s ..\src\client\*.h)
+HEADERS_SERVER			:= $(shell dir /b/s ..\src\server\*.h)
+HEADERS_SHARED			:= $(shell dir /b/s ..\src\shared\*.h)
+
+# Below is for building tests (when you get to it)
+#SRCS_TEST_CLIENTMAIN	:= $(shell dir /b/s ..\tests\client\*.c)
+#SRCS_TEST_CLIENT		:= $(shell dir /b/s ..\src\client\*.c | findstr /v "..\\src\\client\\main.c")
+#SRCS_TEST_SERVERMAIN	:= $(shell dir /b/s ..\tests\server\*.c)
+#SRCS_TEST_SERVER		:= $(shell dir /b/s ..\server\server\*.c | findstr /v "..\\src\\server\\main.c")
+#SRCS_TEST_SHARED		:= $(shell dir /b/s ..\tests\shared\*.c)
+
+#for testing powershell:    cmd /r dir /b/s ..\src\client\*.c | findstr /v "..\\src\\client\\main.c"
+
+###########################################
+# default target
+.PHONY: all
+all: $(TARGET_FULL_CLIENT) $(TARGET_FULL_SERVER)
+
+###########################################
+# Builds client in bin_windows/client
+# 1) Create directories if they don't exist
+# 2) Builds client.exe from src/client + src/shared .c files
+# 3) Copy client config
+# 4) Copy client dlls
+# 5) Copy client assets
+$(TARGET_FULL_CLIENT): $(SRCS_CLIENT) $(SRCS_SHARED) $(HEADERS_CLIENT) $(HEADERS_SHARED)
+	if not exist $(TARGET_DIR_CLIENT) mkdir $(TARGET_DIR_CLIENT)
+	gcc $(SRCS_CLIENT) $(SRCS_SHARED) $(CFLAGS) $(LDFLAGS) -o $(TARGET_FULL_CLIENT)
+#	xcopy ..\client_config.cfg $(TARGET_DIR_CLIENT) /q /d /y 			#uncomment when you have a config file
+#	xcopy ..\third_party\SDL3\SDL3.dll $(TARGET_DIR_CLIENT) /q /d /y 	#uncomment when you need it
+#	xcopy ..\assets $(TARGET_DIR_CLIENT) /s /e /q /d /y 				#uncomment when you need it
+
+###########################################
+# Builds server in bin_windows/server
+# 1) Create directories if they don't exist
+# 2) Builds server.exe from src/server + src/shared .c files
+# 3) Copy server config
+# 4) Copy server dlls
+# 5) Copy server assets
+$(TARGET_FULL_SERVER): $(SRCS_SERVER) $(SRCS_SHARED) $(HEADERS_SERVER) $(HEADERS_SHARED)
+	if not exist $(TARGET_DIR_SERVER) mkdir $(TARGET_DIR_SERVER)
+	gcc $(SRCS_SERVER) $(SRCS_SHARED) $(CFLAGS) $(SRCS_INIPARSER) $(LDFLAGS) -o $(TARGET_FULL_SERVER)
+#	xcopy ..\third_party\iniparser\lib\iniparser.dll $(TARGET_DIR_SERVER) /q /d /y
+	xcopy .\server_config.ini $(TARGET_DIR_SERVER) /q /d /y
+#	xcopy ..\assets $(TARGET_DIR_SERVER) /s /e /q /d /y 				#uncomment when you need it
+
+###########################################
+# clean target
+.PHONY: clean
+clean:
+	del /q $(TARGET_DIR_CLIENT)\*.exe
+	del /q $(TARGET_DIR_SERVER)\*.exe

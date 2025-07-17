@@ -1,0 +1,61 @@
+###########################################
+# Variables + lists of .c and .h files for compilation steps
+TARGET_DIR_CLIENT		:= ../bin_debian/client
+TARGET_DIR_SERVER		:= ../bin_debian/server
+TARGET_EXEC_CLIENT 		:= client.out
+TARGET_EXEC_SERVER 		:= server.out
+TARGET_FULL_CLIENT		:= $(TARGET_DIR_CLIENT)/$(TARGET_EXEC_CLIENT)
+TARGET_FULL_SERVER		:= $(TARGET_DIR_SERVER)/$(TARGET_EXEC_SERVER)
+CFLAGS					:= -Wall -Wextra -Wconversion -g -std=c17
+LDFLAGS					:= 
+#LDFLAGS					:= \
+#							-I../third_party/iniparser_debian/include		-L../third_party/iniparser_debian/lib		-l:libiniparser.a
+SRCS_CLIENT 			:= $(shell find ../src/client/*.c)
+SRCS_SERVER 			:= $(shell find ../src/server/*.c)
+SRCS_SHARED				:= $(shell find ../src/shared/*.c)
+SRCS_INIPARSER			:= $(shell find ../third_party/iniparser_source/src/*.c)
+HEADERS_CLIENT			:= $(shell find ../src/client/*.h)
+HEADERS_SERVER			:= $(shell find ../src/server/*.h)
+HEADERS_SHARED			:= $(shell find ../src/shared/*.h)
+
+###########################################
+# default target
+.PHONY: all
+all: $(TARGET_FULL_CLIENT) $(TARGET_FULL_SERVER)
+
+###########################################
+# Builds client in bin_debian/client
+# 1) Create directories if they don't exist
+# 2) Builds client.exe from src/client + src/shared
+# 3) Copy client config
+# 4) Copy client dlls
+# 5) Copy client assets
+$(TARGET_FULL_CLIENT): $(SRCS_CLIENT) $(SRCS_SHARED) $(HEADERS_CLIENT) $(HEADERS_SHARED)
+	mkdir -p $(TARGET_DIR_CLIENT)
+	gcc $(SRCS_CLIENT) $(SRCS_SHARED) $(CFLAGS) $(LDFLAGS) -o $(TARGET_FULL_CLIENT)
+#	cp -u ../client_config.cfg $(TARGET_DIR_CLIENT)  		#uncomment when you have a config file
+#	cp -u ../third_party/SDL3/SDL3.dll $(TARGET_DIR_CLIENT) #uncomment when you need it
+#	cp -au ../assets/. $(TARGET_DIR_CLIENT) 				#uncomment when you need it
+
+###########################################
+# Builds server in bin_debian/server
+# 1) Create directories if they don't exist
+# 2) Builds server.exe from src/server + src/shared
+# 3) Copy server config
+# 4) Copy server dlls
+# 5) Copy server assets
+$(TARGET_FULL_SERVER): $(SRCS_SERVER) $(SRCS_SHARED) $(HEADERS_SERVER) $(HEADERS_SHARED)
+	mkdir -p $(TARGET_DIR_SERVER)
+	gcc $(SRCS_SERVER) $(SRCS_SHARED) $(CFLAGS) $(SRCS_INIPARSER) $(LDFLAGS) -o $(TARGET_FULL_SERVER)
+	cp -u ./server_config.ini $(TARGET_DIR_SERVER)
+#	cp -u ../third_party/SDL3/SDL3.dll $(TARGET_DIR_SERVER) #uncomment when you need it
+#	cp -au ../assets/. $(TARGET_DIR_SERVER) 				#uncomment when you need it
+
+###########################################
+# clean target
+.PHONY: clean
+clean:
+	rm $(TARGET_DIR_CLIENT)/*.out
+	rm $(TARGET_DIR_SERVER)/*.out
+
+
